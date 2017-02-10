@@ -5,6 +5,7 @@ req.onload = mainClassFileLoaded;
 req.send(null);
 
 var mainClassFile = {};
+var mainMethod;
 
 var cpTags = {
   7: "Class",
@@ -56,6 +57,7 @@ function mainClassFileLoaded(event) {
     var object = {};
     object.tag = tag;
     var type = cpTags[tag];
+    object.type = type;
 
     if (type == "Class") {
       object.name_index = (arr[i++] << 16) | arr[i++];
@@ -151,7 +153,10 @@ function mainClassFileLoaded(event) {
     var methodInfo = {};
     methodInfo.access_flags = (arr[i++] << 16) | arr[i++];
     methodInfo.name_index = (arr[i++] << 16) | arr[i++];
-    console.log(mainClassFile.constantPool[methodInfo.name_index].toString());
+    console.log(getConstant(methodInfo.name_index).toString());
+    if (getConstant(methodInfo.name_index).toString() == "main") {
+      mainMethod = methodInfo;
+    }
     methodInfo.descriptor_index = (arr[i++] << 16) | arr[i++];
     methodInfo.attributes_count = (arr[i++] << 16) | arr[i++];
     var attributes = new Array(methodInfo.attributes_count);
@@ -168,6 +173,7 @@ function mainClassFileLoaded(event) {
     }
     methodInfo.attributes = attributes;
     console.log(methodInfo);
+    methods[x] = methodInfo;
   }
   mainClassFile.methods = methods;
 
@@ -181,11 +187,15 @@ function mainClassFileLoaded(event) {
     for (var z = 0; z < attribute_info.attribute_length; z++) {
       info[z] = arr[i++];
     }
+    var type = getConstant(attribute_info.attribute_name_index).toString();
+    console.log(type);
     attribute_info.info = info;
     attributes[y] = attribute_info;
   }
   mainClassFile.attributes = attributes;
 
+}
 
-
+function getConstant(index) {
+  return mainClassFile.constantPool[index];
 }
